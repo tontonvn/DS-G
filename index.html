@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>用語トレーナー｜DS検定・G検定対策</title>
+<style>
+  :root{
+    --bg:#0f172a;/*slate-900*/
+    --card:#111827ee;/*gray-900*/
+    --muted:#94a3b8;/*slate-400*/
+    --text:#e5e7eb;/*gray-200*/
+    --accent:#22c55e;/*green-500*/
+    --accent-2:#60a5fa;/*blue-400*/
+    --danger:#ef4444;/*red-500*/
+    --warn:#f59e0b;/*amber-500*/
+    --ok:#10b981;/*emerald-500*/
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  html,body{height:100%;}
+  body{margin:0;background:linear-gradient(120deg,#0b1222,#0f172a 40%,#0b1222);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'Noto Sans JP','Hiragino Kaku Gothic ProN','Meiryo',sans-serif;}
+  .wrap{max-width:980px;margin:0 auto;padding:20px 16px 56px;}
+  header{position:sticky;top:0;background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(15,23,42,.85));backdrop-filter:saturate(180%) blur(8px);z-index:10;border-bottom:1px solid rgba(255,255,255,.06)}
+  .h-inner{display:flex;gap:12px;align-items:center;justify-content:space-between;max-width:980px;margin:0 auto;padding:14px 16px}
+  .title{display:flex;gap:10px;align-items:center;font-weight:700}
+  .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(96,165,250,.15);color:#bfdbfe;border:1px solid rgba(96,165,250,.35)}
+  .controls{display:flex;flex-wrap:wrap;gap:8px}
+  button,select,input[type="text"]{background:#0b1222;border:1px solid rgba(255,255,255,.12);color:var(--text);padding:10px 12px;border-radius:12px}
+  button{cursor:pointer}
+  button.primary{background:linear-gradient(180deg,#1f2937,#111827);border-color:rgba(255,255,255,.18)}
+  button.ghost{background:transparent;border-color:rgba(255,255,255,.18)}
+  button:hover{border-color:rgba(255,255,255,.35)}
+  .search{flex:1;min-width:180px}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+  @media(min-width:840px){.grid{grid-template-columns:1.2fr .8fr}}
+
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.06);box-shadow:var(--shadow);border-radius:18px;padding:18px}
+  .term-card{min-height:280px;display:flex;flex-direction:column;gap:14px}
+  .term{font-size:28px;font-weight:800;letter-spacing:.3px}
+  .reading{color:var(--muted);font-size:14px}
+  .def{font-size:16px;line-height:1.8}
+  .meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:12px;border:1px dashed rgba(255,255,255,.18);padding:4px 8px;border-radius:999px;color:#cbd5e1}
+  .rel{display:flex;flex-wrap:wrap;gap:8px}
+  .rel a{color:#a5b4fc;text-decoration:none;border-bottom:1px dashed rgba(165,180,252,.45)}
+  .rel a:hover{filter:brightness(1.2)}
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+  .actions button{flex:1}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .stat{background:#0b1222;border:1px solid rgba(255,255,255,.08);padding:12px;border-radius:14px;text-align:center}
+  .stat .num{font-weight:800;font-size:22px}
+  .stat .lbl{font-size:12px;color:var(--muted)}
+
+  .list{display:grid;gap:10px;max-height:520px;overflow:auto}
+  .row{display:grid;grid-template-columns:1fr 2fr;gap:10px;align-items:start;background:#0b1222;border:1px solid rgba(255,255,255,.08);padding:12px;border-radius:12px}
+  .row small{color:var(--muted)}
+
+  .muted{color:var(--muted)}
+  .hint{font-size:12px;color:#93c5fd}
+
+  dialog{border:none;border-radius:16px;max-width:680px;width:calc(100% - 24px);background:#0b1222;color:var(--text);padding:0;box-shadow:var(--shadow)}
+  .dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .dlg-c{padding:16px;display:grid;gap:12px}
+  .dlg-f{display:flex;gap:10px;padding:16px;border-top:1px solid rgba(255,255,255,.08)}
+  .fld{display:grid;gap:6px}
+  textarea{min-height:96px;background:#0b1222;border:1px solid rgba(255,255,255,.12);color:var(--text);padding:10px;border-radius:12px}
+  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;background:#0b1222;border:1px solid rgba(255,255,255,.18);padding:2px 6px;border-radius:6px}
+
+  footer{opacity:.7;text-align:center;padding:24px 10px}
+</style>
+</head>
+<body>
+  <header>
+    <div class="h-inner">
+      <div class="title">
+        <span style="font-size:20px">📚 用語トレーナー</span>
+        <span class="badge">DS検定 / G検定</span>
+      </div>
+      <div class="controls">
+        <input id="q" class="search" type="text" placeholder="用語検索 (英語/日本語/読み/タグ/関連語) / ショートカット: /" />
+        <select id="tag">
+          <option value="">すべてのタグ</option>
+          <option>ML</option>
+          <option>統計</option>
+          <option>一般</option>
+          <option>データ基盤</option>
+          <option>倫理・法律</option>
+        </select>
+        <select id="mode">
+          <option value="learn">学習カード</option>
+          <option value="quiz-def">クイズ: 定義→用語</option>
+          <option value="quiz-term">クイズ: 用語→定義</option>
+          <option value="list">リスト表示</option>
+        </select>
+        <button id="btn-shuffle" class="ghost" title="順序をシャッフル">🔀</button>
+        <button id="btn-add" class="primary">＋ 用語追加</button>
+        <button id="btn-export" class="ghost">⤴︎ 書き出し</button>
+        <button id="btn-import" class="ghost">⤵︎ 取り込み</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <section class="card term-card">
+        <div class="meta">
+          <span class="chip" id="chip-index">0 / 0</span>
+          <span class="chip" id="chip-due">次回: -</span>
+          <span class="chip" id="chip-tags"></span>
+          <span class="chip" id="chip-box">Box: -</span>
+        </div>
+        <div>
+          <div class="term" id="term">—</div>
+          <div class="reading" id="reading"></div>
+        </div>
+        <div class="def" id="def">左上のモード「学習カード/クイズ」を選び、検索やタグで絞って開始。</div>
+        <div class="rel" id="rel"></div>
+        <div class="actions">
+          <button id="btn-flip">🪄 反転 / ヒント</button>
+          <button id="btn-good" style="border-color: rgba(16,185,129,.6)">👍 覚えた</button>
+          <button id="btn-bad" style="border-color: rgba(239,68,68,.6)">👎 まだ</button>
+          <button id="btn-edit" class="ghost">✎ 編集</button>
+          <button id="btn-del" class="ghost" style="color:#fecaca;border-color: rgba(239,68,68,.45)">🗑 削除</button>
+        </div>
+      </section>
+
+      <aside class="card">
+        <div class="stats">
+          <div class="stat"><div class="num" id="st-count">0</div><div class="lbl">用語総数</div></div>
+          <div class="stat"><div class="num" id="st-new">0</div><div class="lbl">新規</div></div>
+          <div class="stat"><div class="num" id="st-learning">0</div><div class="lbl">学習中</div></div>
+          <div class="stat"><div class="num" id="st-review">0</div><div class="lbl">復習</div></div>
+        </div>
+        <hr style="opacity:.15;margin:16px 0">
+        <div class="muted" style="display:grid;gap:8px">
+          <div>📌 <b>Leitner方式</b>で復習間隔を自動調整（Box1: 明日 / Box2: 3日後 / Box3: 7日後 / Missでリセット）。</div>
+          <div>⌨️ <span class="kbd">/</span> 検索フォーカス、<span class="kbd">Space</span> 反転、<span class="kbd">J/K</span> 前後、<span class="kbd">L</span> 覚えた、<span class="kbd">H</span> まだ。</div>
+          <div>💾 データはブラウザの <b>localStorage</b> に保存。<br>JSONで <b>書き出し/取り込み</b> 可（別端末・再インストール対策）。</div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card" id="listSection" style="margin-top:16px;display:none">
+      <div class="list" id="list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <small class="muted">© 用語トレーナー — GitHub Pages / Notion 埋め込み対応。ローカル保存のみ・通信なし。</small>
+  </footer>
+
+  <!-- 追加/編集ダイアログ -->
+  <dialog id="dlg">
+    <div class="dlg-h">
+      <div id="dlg-title">用語を追加</div>
+      <button id="dlg-x" class="ghost">✕</button>
+    </div>
+    <div class="dlg-c">
+      <div class="fld"><label>用語（英語/日本語）</label><input id="f-term" type="text" placeholder="例: gradient descent / 勾配降下法" /></div>
+      <div class="fld"><label>読み（任意）</label><input id="f-reading" type="text" placeholder="例: こうばい・こうか ほう" /></div>
+      <div class="fld"><label>定義 / ポイント</label><textarea id="f-def" placeholder="初学者にも伝わる一文、その後に要点箇条書きなど"></textarea></div>
+      <div class="fld"><label>タグ（カンマ区切り）</label><input id="f-tags" type="text" placeholder="例: ML, 統計" /></div>
+      <div class="fld"><label>関連語（カンマ区切り）</label><input id="f-related" type="text" placeholder="例: 学習率, 局所解, 最急降下法" /></div>
+      <div class="fld"><label>反対語/混同語（カンマ区切り）</label><input id="f-antonyms" type="text" placeholder="例: 上昇法, hill climbing" /></div>
+      <div class="fld"><label>出典URL（任意）</label><input id="f-src" type="text" placeholder="https://…" /></div>
+    </div>
+    <div class="dlg-f">
+      <button id="dlg-save" class="primary">保存</button>
+      <button id="dlg-cancel" class="ghost">キャンセル</button>
+    </div>
+  </dialog>
+
+  <input id="file" type="file" accept="application/json" style="display:none" />
+
+<script>
+// ==========================
+// データモデル & 永続化
+// ==========================
+const STORE_KEY = 'glossary.v1';
+/**
+ * term: 文字列（主キー）
+ * reading: よみ
+ * def: 定義
+ * tags: ["ML","統計","一般"…]
+ * related: [用語]
+ * antonyms: [用語]
+ * src: 参考URL
+ * box: 0|1|2|3 （Leitner）
+ * due: 次回復習日時（ms）
+ * seen: 出題回数
+ * correct: 正答回数
+ */
+let DB = [];
+
+function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
+function load(){
+  try{ DB = JSON.parse(localStorage.getItem(STORE_KEY)||'[]') }catch{ DB=[] }
+}
+
+// 既存に無ければ初期用語を投入
+function ensureSeed(){
+  if(DB.length>0) return;
+  const seed = [
+    // ——— ML（代表）
+    G('gradient descent','勾配降下法','目的関数の勾配の負方向へ反復的に移動して極小値を探索する最適化手法。学習率の設定が重要。', ['ML'], ['learning rate','局所解','最急降下法'], ['hill climbing'], ''),
+    G('stochastic gradient descent (SGD)','確率的勾配降下法','データのミニバッチ/単一サンプルで近似勾配を用いて更新する手法。大規模データで高速・オンライン学習に適する。', ['ML'], ['mini-batch','momentum','Adam'], ['batch gradient descent'], ''),
+    G('learning rate','学習率','パラメータ更新の一回あたりのステップ幅。大きすぎると発散，小さすぎると収束が遅い。スケジューラやwarmupで調整する。', ['ML'], ['optimizer','SGD','Adam'], [''], ''),
+    G('overfitting','過学習','訓練データに過剰適合して汎化性能が低下する状態。対策: 交差検証・正則化・データ拡張・早期終了など。', ['ML'], ['underfitting','regularization','cross-validation'], [''], ''),
+    G('regularization','正則化','モデルの複雑さに罰則を課して汎化を促す手法（L1/L2, Dropout等）。', ['ML'], ['L1','L2','dropout'], [''], ''),
+    G('Precision / Recall','適合率 / 再現率','分類性能指標。Precision=予測陽性のうち正解割合、Recall=実際陽性のうち検出割合。F1はその調和平均。', ['ML','統計'], ['F1','ROC','AUC'], [''], ''),
+    G('ROC / AUC','ROC曲線 / AUC','閾値を動かした際のTPR-FPR曲線とその面積。クラス不均衡で有用。', ['ML','統計'], ['precision-recall curve'], [''], ''),
+    G('bias-variance tradeoff','バイアス・バリアンス・トレードオフ','モデルの単純さ由来の系統誤差（バイアス）とデータ依存の揺らぎ（バリアンス）の両立関係。', ['ML','統計'], ['overfitting','underfitting'], [''], ''),
+    G('cross-validation','交差検証','データを分割して学習/評価を繰返す手法。k-fold, LOOCVなど。', ['統計','ML'], ['hold-out','nested CV'], [''], ''),
+    G('confusion matrix','混同行列','分類結果のTP/FP/FN/TNの集計表。', ['ML','統計'], ['precision','recall','F1'], [''], ''),
+    G('feature scaling','特徴量スケーリング','標準化（z-score）や正規化（[0,1]）で学習安定化。', ['ML'], ['standardization','normalization'], [''], ''),
+    G('principal component analysis (PCA)','主成分分析','分散最大の方向に直交基底を求め次元圧縮する線形手法。', ['統計','ML'], ['SVD','eigenvalue'], [''], ''),
+    G('t-SNE','t-SNE','高次元データの可視化手法。局所構造の保持に強いがグローバル距離は歪む。', ['ML'], ['UMAP','PCA'], [''], ''),
+    G('UMAP','UMAP','位相的手法に基づく次元削減。t-SNEより速く大規模向き。', ['ML'], ['t-SNE','PCA'], [''], ''),
+    G('loss function','損失関数','予測と正解のズレを数値化。MSE, Cross-Entropy, Hingeなど。', ['ML'], ['objective'], [''], ''),
+    G('activation function','活性化関数','非線形変換。ReLU, sigmoid, tanh, GELU等。', ['ML'], ['ReLU','sigmoid','tanh','GELU'], [''], ''),
+    G('regularized logistic regression','正則化ロジスティック回帰','ロジスティック回帰にL1/L2等の罰則を加えたもの。', ['統計','ML'], ['lasso','ridge'], [''], ''), 
+
+    // ——— 深層学習
+    G('transformer','トランスフォーマー','自己注意機構を用いた並列計算に強いアーキテクチャ。Encoder/Decoder, Multi-Head Attention, 残差接続, 層正規化などで構成。', ['ML'], ['self-attention','positional encoding','LLM'], ['RNN','LSTM'], ''),
+    G('self-attention','自己注意','系列内のトークン間関係を重みにより動的に表現。Q/K/Vを用いる。', ['ML'], ['multi-head attention','transformer'], [''], ''),
+    G('fine-tuning','ファインチューニング','事前学習モデルを下流タスクに再学習させる。', ['ML'], ['LoRA','instruction tuning'], ['from-scratch'], ''),
+    G('LoRA','LoRA','低ランク分解により微調整パラメータを削減する手法。', ['ML'], ['fine-tuning'], [''], ''),
+    G('tokenization','トークナイゼーション','テキストをサブワード等に分割。BPE, Unigramなど。', ['ML'], ['BPE','sentencepiece'], [''], ''),
+
+    // ——— 統計（基礎）
+    G('population / sample','母集団 / 標本','母集団から抽出した部分集合が標本。推測統計は標本から母集団の性質を推定する。', ['統計'], ['sampling'], [''], ''),
+    G('central limit theorem','中心極限定理','独立同分布の和は十分大きければ正規分布に近づく。', ['統計'], ['law of large numbers'], [''], ''),
+    G('confidence interval','信頼区間','母数の区間推定。95%CIなど。', ['統計'], ['p-value'], [''], ''), 
+    G('p-value','p値','帰無仮説の下で、観測以上の極端な結果が得られる確率。小さいほど帰無仮説に反する証拠が強い。', ['統計'], ['hypothesis testing'], [''], ''),
+    G('t-test / ANOVA','t検定 / 分散分析','平均差の有意性検定。対応あり/なし、1要因/2要因など。', ['統計'], ['effect size','post-hoc'], [''], ''),
+    G('chi-square test','カイ二乗検定','カテゴリーデータの独立性・適合度の検定。', ['統計'], ['Fisher exact test'], [''], ''),
+    G('bayes theorem','ベイズの定理','事前確率と尤度から事後確率を得る。', ['統計'], ['naive bayes','MAP','MLE'], [''], ''),
+    G('MLE / MAP','最尤推定 / 事後確率最大化','データ尤度を最大化（MLE）/ 事前を掛け合わせて最大化（MAP）。', ['統計'], ['bayes'], [''], ''),
+
+    // ——— 評価・運用
+    G('train / validation / test','学習/検証/テスト','モデル構築でのデータ分割の基本。', ['ML'], ['cross-validation','hold-out'], [''], ''), 
+    G('data leakage','データリーク','本来未知であるべき情報が学習に混入して過大評価となる問題。', ['ML'], ['target leakage'], [''], ''),
+    G('drift','ドリフト','データ分布や関係の経時変化。データ/概念ドリフト。', ['ML'], ['monitoring','MLOps'], [''], ''),
+    G('MLOps','MLOps','MLの継続的な学習・評価・デプロイ・監視を行う実践。', ['ML','データ基盤'], ['CI/CD','feature store','model registry'], [''], ''),
+
+    // ——— 一般・非エンジニア向けも
+    G('API','API','アプリ同士が機能やデータをやり取りするための窓口。', ['一般','データ基盤'], ['REST','GraphQL'], [''], ''),
+    G('ETL / ELT','ETL / ELT','抽出・変換・ロード（またはロード後に変換）。', ['データ基盤'], ['data pipeline','ingestion'], [''], ''),
+    G('schema','スキーマ','データの構造（列名、型、制約など）の設計情報。', ['データ基盤'], ['data model'], [''], ''),
+    G('SQL','SQL','関係データベース操作言語。SELECT/WHERE/GROUP BY/JOINなど。', ['一般','データ基盤'], ['NoSQL'], [''], ''),
+    G('vector database','ベクトルDB','高次元ベクトルの近傍探索に特化したDB。ANN索引（HNSW, IVF等）を用いる。', ['データ基盤','ML'], ['RAG','embedding'], [''], ''),
+
+    // ——— 倫理・法律
+    G('GDPR','GDPR','EU一般データ保護規則。個人データの処理に関するルール。', ['倫理・法律'], ['個人情報保護'], [''], ''),
+    G('privacy by design','プライバシー・バイ・デザイン','設計段階からプライバシー保護を組み込む考え方。', ['倫理・法律'], ['data minimization'], [''], ''),
+
+    // ——— 試験向けに追加
+    G('confounding','交絡','介入とアウトカムの間の第3の要因により因果推論が歪むこと。', ['統計'], ['causal inference','RCT','傾向スコア'], [''], ''),
+    G('propensity score','傾向スコア','共変量から介入を受ける確率を推定しバランス取りに用いる。', ['統計'], ['IPW','マッチング'], [''], ''),
+
+    // ——— 指定の追加用語
+    G('context engineering','コンテキストエンジニアリング','生成AIに入力する前提・目的・制約・評価軸などの「文脈」を設計・構成し、再現性のある出力品質を得る技法。タスク分割、ロール付与、入出力フォーマット、評価ループ、外部ツール連携などを体系化する。', ['一般','ML'], ['prompt engineering','system design','RAG','評価指標'], [''], '')
+  ];
+  // さらに非エンジニア向けの基礎語を多数追加（抜粋）
+  const basic = [
+    G('latency','レイテンシ','応答までの遅延時間。', ['一般'], ['throughput'], [''], ''),
+    G('throughput','スループット','単位時間あたりの処理量。', ['一般'], ['latency'], [''], ''),
+    G('scalability','スケーラビリティ','負荷増加への拡張のしやすさ。', ['一般'], ['vertical scaling','horizontal scaling'], [''], ''),
+    G('A/B test','A/Bテスト','2群で比較し効果を検証する実験。', ['統計','ML'], ['hypothesis testing'], [''], ''),
+    G('normalization','正規化','スケーリングや正規分布化など文脈依存の意味を持つ。', ['ML','統計'], ['standardization'], [''], ''),
+    G('standardization','標準化','平均0, 分散1への変換。', ['統計','ML'], ['z-score'], [''], '')
+  ];
+  DB = seed.concat(basic).map(x=>({...x, box:0, due:Date.now(), seen:0, correct:0 }));
+  save();
+}
+
+function G(term, jp, def, tags=[], related=[], antonyms=[], src=''){
+  return {term, reading:jp, def, tags, related, antonyms, src};
+}
+
+// ==========================
+// クエリ & キュー
+// ==========================
+let IDX = 0;               // 表示中のインデックス（ビューに対する）
+let VIEW = [];             // フィルタ後の配列の参照（DBの浅いコピー）
+let FLIPPED = false;       // 反転状態（クイズ用）
+
+function applyFilter(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const tag = document.getElementById('tag').value;
+  const now = Date.now();
+  VIEW = DB.filter(x=>{
+    const hitQ = !q || [x.term,x.reading,x.def,(x.tags||[]).join(','),(x.related||[]).join(','),(x.antonyms||[]).join(',')]
+      .join('\n').toLowerCase().includes(q);
+    const hitT = !tag || (x.tags||[]).includes(tag);
+    return hitQ && hitT;
+  }).sort((a,b)=> (a.due||0)-(b.due||0)); // 期日の近い順
+  if(document.getElementById('mode').value==='list') renderList();
+  IDX = 0; render();
+}
+
+function shuffle(){
+  for(let i=VIEW.length-1;i>0;i--){ const j=(Math.random()* (i+1))|0; [VIEW[i],VIEW[j]]=[VIEW[j],VIEW[i]] }
+  IDX = 0; render();
+}
+
+// ==========================
+// Leitner 箱制御
+// ==========================
+function schedule(card, ok){
+  if(!card.box) card.box=0;
+  if(ok){
+    card.box = Math.min(3, (card.box||0)+1);
+  }else{
+    card.box = 0; // ミスでリセット
+  }
+  const days = [0,1,3,7][card.box];
+  card.due = Date.now() + days*24*60*60*1000;
+  card.seen = (card.seen||0)+1;
+  if(ok) card.correct = (card.correct||0)+1;
+}
+
+// ==========================
+// レンダリング
+// ==========================
+function render(){
+  document.getElementById('st-count').textContent = DB.length;
+  document.getElementById('st-new').textContent = DB.filter(x=> (x.box||0)===0).length;
+  document.getElementById('st-learning').textContent = DB.filter(x=> (x.box||0)===1).length;
+  document.getElementById('st-review').textContent = DB.filter(x=> (x.box||0)>=2).length;
+
+  const mode = document.getElementById('mode').value;
+  const listSection = document.getElementById('listSection');
+  listSection.style.display = (mode==='list') ? 'block' : 'none';
+
+  if(VIEW.length===0){
+    setText('term','—'); setText('reading',''); setHTML('def','該当する用語がありません。フィルタを変えるか追加してください。');
+    setText('chip-index','0 / 0'); setText('chip-due','次回: -'); setText('chip-tags',''); setText('chip-box','Box: -');
+    document.getElementById('rel').innerHTML='';
+    return;
+  }
+
+  const card = VIEW[Math.max(0, Math.min(IDX, VIEW.length-1))];
+  const dueTxt = card.due ? new Date(card.due).toLocaleString('ja-JP') : '-';
+
+  setText('chip-index', `${IDX+1} / ${VIEW.length}`);
+  setText('chip-due', `次回: ${dueTxt}`);
+  setText('chip-tags', (card.tags||[]).map(t=>`#${t}`).join(' '));
+  setText('chip-box', `Box: ${card.box||0}`);
+
+  const modeIsQuizDef = (mode==='quiz-def');
+  const modeIsQuizTerm = (mode==='quiz-term');
+  FLIPPED = FLIPPED && (modeIsQuizDef||modeIsQuizTerm);
+
+  setText('term', (modeIsQuizDef && !FLIPPED) ? '定義: ' : card.term);
+  setText('reading', card.reading||'');
+
+  if(modeIsQuizDef && !FLIPPED){
+    setHTML('def', maskDefinition(card.def));
+  }else if(modeIsQuizTerm && !FLIPPED){
+    setHTML('def', 'この用語の定義は？');
+  }else{
+    setHTML('def', escapeHTML(card.def).replace(/\n/g,'<br>'));
+  }
+
+  const rels = [...(card.related||[]).map(x=>({t:x, k:'関連'})), ...(card.antonyms||[]).map(x=>({t:x, k:'反対/混同'}))];
+  document.getElementById('rel').innerHTML = rels.map(r=>`<a href="#" data-jump="${encodeURIComponent(r.t)}">${escapeHTML(r.t)}<small class="muted">(${r.k})</small></a>`).join(' ');
+}
+
+function renderList(){
+  const L = document.getElementById('list');
+  L.innerHTML = VIEW.map(c=>`
+    <div class="row">
+      <div><b>${escapeHTML(c.term)}</b><br><small>${(c.tags||[]).map(t=>'#'+t).join(' ')}</small></div>
+      <div>${escapeHTML(c.def)}</div>
+    </div>
+  `).join('');
+}
+
+function maskDefinition(text){
+  // 定義の名詞・数字っぽい部分を伏せ字に（簡易）
+  return escapeHTML(text).replace(/[A-Za-zÀ-ÖØ-öø-ÿ一-龯ぁ-んァ-ヴー0-9]{3,}/g, '▮▮▮');
+}
+
+function setText(id, v){ document.getElementById(id).textContent = v }
+function setHTML(id, v){ document.getElementById(id).innerHTML = v }
+function escapeHTML(s){ return (s||'').replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])) }
+
+// ==========================
+// UI 操作
+// ==========================
+function next(n=1){ IDX = (IDX + n + VIEW.length) % VIEW.length; FLIPPED=false; render(); }
+function prev(){ next(-1) }
+
+function mark(ok){
+  if(!VIEW.length) return;
+  const card = VIEW[IDX];
+  schedule(card, ok); save();
+  // 次に進む（未到達/期限近いものを優先）
+  applyFilter();
+}
+
+// ジャンプ（関連語クリック）
+addEventListener('click', e=>{
+  const a = e.target.closest('a[data-jump]');
+  if(!a) return;
+  e.preventDefault();
+  const key = decodeURIComponent(a.dataset.jump).toLowerCase();
+  const i = VIEW.findIndex(x => x.term.toLowerCase()===key || (x.reading||'').toLowerCase()===key);
+  if(i>=0){ IDX=i; render(); }
+});
+
+// 追加/編集
+let editIndex = -1; // DB上のインデックス
+function openDialog(edit=false){
+  const dlg = document.getElementById('dlg');
+  document.getElementById('dlg-title').textContent = edit? '用語を編集' : '用語を追加';
+  if(edit){
+    const d = VIEW[IDX]; const j = DB.indexOf(d); editIndex = j;
+    document.getElementById('f-term').value = d.term||'';
+    document.getElementById('f-reading').value = d.reading||'';
+    document.getElementById('f-def').value = d.def||'';
+    document.getElementById('f-tags').value = (d.tags||[]).join(', ');
+    document.getElementById('f-related').value = (d.related||[]).join(', ');
+    document.getElementById('f-antonyms').value = (d.antonyms||[]).join(', ');
+    document.getElementById('f-src').value = d.src||'';
+  }else{
+    editIndex = -1;
+    ['f-term','f-reading','f-def','f-tags','f-related','f-antonyms','f-src'].forEach(id=>document.getElementById(id).value='');
+  }
+  dlg.showModal();
+}
+
+function closeDialog(){ document.getElementById('dlg').close() }
+
+function saveDialog(){
+  const d = {
+    term: getVal('f-term'), reading:getVal('f-reading'), def:getVal('f-def'),
+    tags: csv('f-tags'), related: csv('f-related'), antonyms: csv('f-antonyms'), src:getVal('f-src')
+  };
+  if(!d.term || !d.def){ alert('用語と定義は必須です'); return }
+  if(editIndex>=0){
+    const prev = DB[editIndex];
+    DB[editIndex] = {...prev, ...d};
+  }else{
+    DB.push({...d, box:0, due:Date.now(), seen:0, correct:0});
+  }
+  save(); closeDialog(); applyFilter();
+}
+
+function csv(id){
+  return getVal(id).split(',').map(s=>s.trim()).filter(Boolean);
+}
+function getVal(id){ return document.getElementById(id).value.trim() }
+
+// 削除
+function del(){
+  if(!VIEW.length) return;
+  const d = VIEW[IDX]; const j = DB.indexOf(d);
+  if(confirm(`「${d.term}」を削除しますか？`)){
+    DB.splice(j,1); save(); applyFilter();
+  }
+}
+
+// 書き出し/取り込み
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(DB,null,2)], {type:'application/json'});
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'glossary.json'});
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function importJSON(){ document.getElementById('file').click() }
+
+document.getElementById('file').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const arr = JSON.parse(reader.result);
+      if(!Array.isArray(arr)) throw new Error('配列ではありません');
+      // 既存にマージ（termキーで上書き）
+      const map = new Map(DB.map(x=>[x.term,x]));
+      arr.forEach(x=>{
+        if(!x.term||!x.def) return;
+        const m = map.get(x.term);
+        if(m){ Object.assign(m,x); }
+        else { DB.push({...x, box:x.box||0, due:x.due||Date.now(), seen:x.seen||0, correct:x.correct||0}); }
+      });
+      save(); applyFilter(); alert('取り込み完了');
+    }catch(err){ alert('取り込み失敗: '+err.message) }
+  };
+  reader.readAsText(f);
+});
+
+// キーボード
+addEventListener('keydown', e=>{
+  const tag = e.target.tagName.toLowerCase();
+  if(tag==='input' || tag==='textarea') return; // フォーム中は無効
+  if(e.key==='/' ){ e.preventDefault(); document.getElementById('q').focus(); return; }
+  if(e.key===' ' ){ e.preventDefault(); flip(); return; }
+  if(e.key==='j' ){ next(); return; }
+  if(e.key==='k' ){ prev(); return; }
+  if(e.key==='l' ){ mark(true); return; }
+  if(e.key==='h' ){ mark(false); return; }
+});
+
+function flip(){ FLIPPED = !FLIPPED; render() }
+
+// イベント配線
+window.addEventListener('DOMContentLoaded', () =>{
+  load(); ensureSeed();
+  ['q','tag','mode'].forEach(id=>document.getElementById(id).addEventListener('input', applyFilter));
+  document.getElementById('btn-shuffle').addEventListener('click', shuffle);
+  document.getElementById('btn-flip').addEventListener('click', flip);
+  document.getElementById('btn-good').addEventListener('click', ()=>mark(true));
+  document.getElementById('btn-bad').addEventListener('click', ()=>mark(false));
+  document.getElementById('btn-edit').addEventListener('click', ()=>openDialog(true));
+  document.getElementById('btn-add').addEventListener('click', ()=>openDialog(false));
+  document.getElementById('btn-del').addEventListener('click', del);
+  document.getElementById('dlg-x').addEventListener('click', closeDialog);
+  document.getElementById('dlg-cancel').addEventListener('click', closeDialog);
+  document.getElementById('dlg-save').addEventListener('click', saveDialog);
+  document.getElementById('btn-export').addEventListener('click', exportJSON);
+  document.getElementById('btn-import').addEventListener('click', importJSON);
+  applyFilter();
+});
+</script>
+</body>
+</html>
